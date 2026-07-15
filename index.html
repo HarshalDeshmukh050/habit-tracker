@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grove — Habit Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #EEF0E8;
+    --paper-raised: #F7F8F3;
+    --ink: #263228;
+    --ink-soft: #4A5A4C;
+    --muted: #8B9388;
+    --line: #DADFD2;
+    --moss: #5B7F5E;
+    --moss-dim: #C6D6C4;
+    --clay: #B5674A;
+    --cat-work: #4B5A78;
+    --cat-study: #7C6A9E;
+    --cat-personal: #B5674A;
+    --cat-idea: #C99A3E;
+    --cat-other: #6B7280;
+    --shadow: 0 1px 2px rgba(38,50,40,0.06), 0 4px 14px rgba(38,50,40,0.05);
+  }
+  [data-theme="dark"]{
+    --paper: #1B211C;
+    --paper-raised: #232B24;
+    --ink: #E7ECE4;
+    --ink-soft: #B7C2B6;
+    --muted: #6E7A6E;
+    --line: #303B31;
+    --moss: #7FAE81;
+    --moss-dim: #2C3B2D;
+    --clay: #D08865;
+    --shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 20px rgba(0,0,0,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    transition:background .3s ease, color .3s ease;
+  }
+  ::selection{background:var(--moss-dim);}
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:28px 40px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:baseline; gap:12px;}
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:34px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .brand .leaf{font-size:26px; transform:translateY(2px); display:inline-block;}
+  .brand .tagline{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.03em;
+  }
+  .top-actions{display:flex; align-items:center; gap:10px;}
+  .icon-btn{
+    width:38px; height:38px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color:var(--ink);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{background:var(--moss-dim); transform:translateY(-1px);}
+  .icon-btn svg{width:17px; height:17px;}
+
+  .filters{
+    display:flex; gap:8px; flex-wrap:wrap;
+    padding:20px 40px 0;
+  }
+  .pill{
+    padding:7px 16px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    color:var(--ink-soft);
+    transition:all .15s ease;
+    white-space:nowrap;
+  }
+  .pill:hover{border-color:var(--moss);}
+  .pill.active{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+
+  .main{
+    padding:26px 40px 120px;
+    max-width:920px;
+    margin:0 auto;
+  }
+
+  .empty{
+    text-align:center;
+    padding:110px 20px;
+  }
+  .empty .seed{font-size:40px; margin-bottom:14px;}
+  .empty h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0 0 6px;
+  }
+  .empty p{color:var(--muted); margin:0; font-size:14px;}
+
+  .habit-card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 22px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+  }
+  .habit-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:14px;
+  }
+  .habit-title-row{display:flex; align-items:center; gap:10px;}
+  .habit-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:19px;
+  }
+  .cat-tag{
+    font-size:11px;
+    font-family:'IBM Plex Mono', monospace;
+    padding:3px 9px;
+    border-radius:999px;
+    color:#fff;
+    letter-spacing:0.02em;
+  }
+  .habit-stats{
+    display:flex; align-items:center; gap:18px;
+  }
+  .stat{
+    text-align:right;
+  }
+  .stat .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:20px;
+    line-height:1;
+  }
+  .stat .label{
+    font-size:10px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .growth-glyph{font-size:22px;}
+  .delete-btn{
+    background:none; border:none; cursor:pointer;
+    color:var(--muted); padding:4px; border-radius:6px;
+  }
+  .delete-btn:hover{color:var(--clay); background:var(--moss-dim);}
+
+  .heatmap-wrap{
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .heatmap{
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-rows:repeat(7, 13px);
+    gap:3px;
+    width:max-content;
+  }
+  .cell{
+    width:13px; height:13px;
+    border-radius:4px;
+    background:var(--moss-dim);
+    border:1px solid var(--line);
+    cursor:pointer;
+    transition:transform .1s ease;
+    position:relative;
+  }
+  .cell:hover{transform:scale(1.25);}
+  .cell.future{cursor:default; opacity:0.35; background:transparent;}
+  .cell.today{box-shadow:0 0 0 1.5px var(--moss);}
+
+  .fab{
+    position:fixed;
+    bottom:34px; right:38px;
+    width:56px; height:56px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    font-size:26px;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(38,50,40,0.25);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease;
+  }
+  .fab:hover{transform:scale(1.06) rotate(90deg);}
+
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(20,26,20,0.4);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:50;
+    backdrop-filter:blur(2px);
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--paper-raised);
+    border-radius:18px;
+    padding:28px;
+    width:380px;
+    max-width:90vw;
+    border:1px solid var(--line);
+    box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal h3{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    margin:0 0 18px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-family:'IBM Plex Mono', monospace;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+  }
+  .field input:focus, .field select:focus{
+    outline:2px solid var(--moss);
+    outline-offset:1px;
+  }
+  .modal-actions{
+    display:flex; gap:10px; justify-content:flex-end; margin-top:20px;
+  }
+  .btn{
+    padding:9px 18px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink);
+    cursor:pointer;
+    font-size:14px;
+    font-weight:500;
+  }
+  .btn.primary{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .btn.primary:hover{background:var(--moss); border-color:var(--moss);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+  @media (max-width:640px){
+    .topbar, .filters, .main{padding-left:18px; padding-right:18px;}
+    .habit-stats{gap:10px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <h1><span class="leaf">🌱</span> Grove</h1>
+    <span class="tagline">// consistency, cultivated</span>
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" id="themeToggle" title="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="filters" id="filters"></div>
+
+<div class="main" id="main"></div>
+
+<button class="fab" id="addBtn" title="Add habit">+</button>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>New habit</h3>
+    <div class="field">
+      <label for="habitName">Name</label>
+      <input type="text" id="habitName" placeholder="e.g. Read 20 pages" maxlength="40">
+    </div>
+    <div class="field">
+      <label for="habitCategory">Category</label>
+      <select id="habitCategory">
+        <option value="Work">Work</option>
+        <option value="Study">Study</option>
+        <option value="Personal">Personal</option>
+        <option value="Idea">Idea</option>
+        <option value="Other" selected>Other</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelBtn">Cancel</button>
+      <button class="btn primary" id="saveBtn">Create habit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CATS = ["All","Work","Study","Personal","Idea","Other"];
+  const CAT_COLOR = {
+    Work:"var(--cat-work)", Study:"var(--cat-study)", Personal:"var(--cat-personal)",
+    Idea:"var(--cat-idea)", Other:"var(--cat-other)"
+  };
+  const STORE_KEY = "grove_habits_v1";
+  const THEME_KEY = "grove_theme_v1";
+  const DAYS = 91; // 13 weeks
+
+  let state = {
+    activeFilter: "All",
+    habits: []
+  };
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      state.habits = raw ? JSON.parse(raw) : [];
+    }catch(e){ state.habits = []; }
+    const theme = localStorage.getItem(THEME_KEY);
+    if(theme === "dark") document.documentElement.setAttribute("data-theme","dark");
+  }
+  function save(){
+    localStorage.setItem(STORE_KEY, JSON.stringify(state.habits));
+  }
+
+  function todayStr(){
+    return new Date().toISOString().slice(0,10);
+  }
+  function dateStrDaysAgo(n){
+    const d = new Date();
+    d.setDate(d.getDate()-n);
+    return d.toISOString().slice(0,10);
+  }
+
+  function computeStreaks(doneSet){
+    // current streak: consecutive days ending today or yesterday
+    let current = 0;
+    let checkDate = new Date();
+    let today = todayStr();
+    if(!doneSet.has(today)){
+      checkDate.setDate(checkDate.getDate()-1);
+    }
+    while(true){
+      const ds = checkDate.toISOString().slice(0,10);
+      if(doneSet.has(ds)){
+        current++;
+        checkDate.setDate(checkDate.getDate()-1);
+      } else break;
+    }
+    // longest streak within tracked window
+    let longest = 0, run = 0;
+    for(let i=DAYS-1;i>=0;i--){
+      const ds = dateStrDaysAgo(i);
+      if(doneSet.has(ds)){ run++; longest = Math.max(longest, run); }
+      else run = 0;
+    }
+    longest = Math.max(longest, current);
+    return {current, longest};
+  }
+
+  function growthGlyph(streak){
+    if(streak >= 30) return "🌳";
+    if(streak >= 14) return "🌿";
+    if(streak >= 7) return "🌾";
+    if(streak >= 1) return "🌱";
+    return "🫘";
+  }
+
+  function renderFilters(){
+    const el = document.getElementById("filters");
+    el.innerHTML = "";
+    CATS.forEach(cat=>{
+      const b = document.createElement("button");
+      b.className = "pill" + (state.activeFilter===cat ? " active":"");
+      b.textContent = cat;
+      b.onclick = ()=>{ state.activeFilter = cat; renderAll(); };
+      el.appendChild(b);
+    });
+  }
+
+  function renderHeatmap(habit){
+    const doneSet = new Set(habit.dates);
+    const wrap = document.createElement("div");
+    wrap.className = "heatmap-wrap";
+    const grid = document.createElement("div");
+    grid.className = "heatmap";
+    for(let i=DAYS-1;i>=0;i--){
+      const ds = dateStrDaysAgo(i);
+      const cell = document.createElement("div");
+      cell.className = "cell" + (i===0 ? " today":"");
+      if(doneSet.has(ds)){
+        cell.style.background = "var(--moss)";
+        cell.style.borderColor = "var(--moss)";
+      }
+      cell.title = ds + (doneSet.has(ds) ? " ✓" : "");
+      cell.onclick = ()=>{
+        if(doneSet.has(ds)){ doneSet.delete(ds); } else { doneSet.add(ds); }
+        habit.dates = Array.from(doneSet);
+        save();
+        renderAll();
+      };
+      grid.appendChild(cell);
+    }
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function renderHabitCard(habit){
+    const doneSet = new Set(habit.dates);
+    const {current, longest} = computeStreaks(doneSet);
+
+    const card = document.createElement("div");
+    card.className = "habit-card";
+
+    const head = document.createElement("div");
+    head.className = "habit-head";
+
+    const titleRow = document.createElement("div");
+    titleRow.className = "habit-title-row";
+    const glyph = document.createElement("span");
+    glyph.className = "growth-glyph";
+    glyph.textContent = growthGlyph(current);
+    const name = document.createElement("span");
+    name.className = "habit-name";
+    name.textContent = habit.name;
+    const tag = document.createElement("span");
+    tag.className = "cat-tag";
+    tag.textContent = habit.category;
+    tag.style.background = CAT_COLOR[habit.category] || "var(--cat-other)";
+    titleRow.appendChild(glyph);
+    titleRow.appendChild(name);
+    titleRow.appendChild(tag);
+
+    const statsRow = document.createElement("div");
+    statsRow.className = "habit-stats";
+    statsRow.innerHTML = `
+      <div class="stat"><div class="num">${current}</div><div class="label">streak</div></div>
+      <div class="stat"><div class="num">${longest}</div><div class="label">best</div></div>
+    `;
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>`;
+    delBtn.title = "Delete habit";
+    delBtn.onclick = ()=>{
+      if(confirm(`Delete "${habit.name}"? This can't be undone.`)){
+        state.habits = state.habits.filter(h=>h.id !== habit.id);
+        save();
+        renderAll();
+      }
+    };
+    statsRow.appendChild(delBtn);
+
+    head.appendChild(titleRow);
+    head.appendChild(statsRow);
+    card.appendChild(head);
+    card.appendChild(renderHeatmap(habit));
+    return card;
+  }
+
+  function renderAll(){
+    renderFilters();
+    const main = document.getElementById("main");
+    main.innerHTML = "";
+    const filtered = state.activeFilter === "All"
+      ? state.habits
+      : state.habits.filter(h=>h.category === state.activeFilter);
+
+    if(filtered.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.innerHTML = `
+        <div class="seed">🫘</div>
+        <h2>No habits yet</h2>
+        <p>Plant your first one — tap the + below</p>
+      `;
+      main.appendChild(empty);
+      return;
+    }
+    filtered.forEach(h => main.appendChild(renderHabitCard(h)));
+  }
+
+  // Modal wiring
+  const overlay = document.getElementById("modalOverlay");
+  document.getElementById("addBtn").onclick = ()=>{
+    document.getElementById("habitName").value = "";
+    document.getElementById("habitCategory").value = "Other";
+    overlay.classList.add("open");
+    setTimeout(()=>document.getElementById("habitName").focus(), 50);
+  };
+  document.getElementById("cancelBtn").onclick = ()=> overlay.classList.remove("open");
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.classList.remove("open"); };
+  document.getElementById("saveBtn").onclick = ()=>{
+    const name = document.getElementById("habitName").value.trim();
+    const category = document.getElementById("habitCategory").value;
+    if(!name) return;
+    state.habits.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      name, category, dates: []
+    });
+    save();
+    overlay.classList.remove("open");
+    renderAll();
+  };
+  document.getElementById("habitName").addEventListener("keydown", e=>{
+    if(e.key === "Enter") document.getElementById("saveBtn").click();
+  });
+
+  // Theme toggle
+  document.getElementById("themeToggle").onclick = ()=>{
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    if(isDark){
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem(THEME_KEY, "light");
+    } else {
+      document.documentElement.setAttribute("data-theme","dark");
+      localStorage.setItem(THEME_KEY, "dark");
+    }
+  };
+
+  load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
