@@ -8,7 +8,7 @@ A single-file habit tracker with a GitHub-style heatmap per habit, streak tracki
 2. Upload `index.html` to the repo root (drag-and-drop on GitHub, or `git add`/`commit`/`push`).
 3. Go to **Settings → Pages**.
 4. Under "Build and deployment", set **Source** to `Deploy from a branch`, branch `main`, folder `/ (root)`.
-5. Save — GitHub gives you a URL like `https://HarshalDeshmukh050..github.io/habit-tracker/` within a minute or two.
+5. Save — GitHub gives you a URL like `https://harshaldeshmukh050.github.io/habit-tracker/` within a minute or two.
 
 ## Notes
 - Everything (habits, dates, theme) is stored per-browser via `localStorage`, so it won't sync across devices — that's a good next feature if you want to extend it (e.g. with a small backend or GitHub Gist sync).
